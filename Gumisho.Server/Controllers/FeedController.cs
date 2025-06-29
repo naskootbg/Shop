@@ -1,0 +1,63 @@
+﻿using Backend.Data;
+using Backend.Data.Models;
+using Backend.DTO;
+using Humanizer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Policy;
+
+namespace Backend.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    //[Authorize(Roles = "Admin")]
+    public class FeedController : ControllerBase
+    {
+        private readonly AppDbContext db;
+        
+
+        public FeedController(AppDbContext _db)
+        {
+            db = _db;             
+        }
+        [HttpPost("all")]
+        public async Task<IActionResult> AllHashes()
+        {
+            var feeds = await db.Feeds.AsNoTracking().ToListAsync();
+            return Ok(feeds);   
+        }
+        [HttpPost("add")]
+        public async Task<IActionResult> AddlHashes([FromBody] FeedDto dto)
+        {
+            if (dto.Id > 0)
+            {
+                var hash = await db.Feeds.FindAsync(dto.Id);
+                hash!.Name = dto.Name;
+                hash.Hash = dto.Hash;
+                db.Feeds.Update(hash);
+                await db.SaveChangesAsync();
+                return Ok(hash);
+            }
+            else {
+                var newFeed = new Feed()
+                {
+                    Name = dto.Name,
+                    Hash = dto.Hash,
+                };
+                await db.Feeds.AddAsync(newFeed);
+                await db.SaveChangesAsync();
+                return Ok(newFeed);
+            }
+        }
+        [HttpPost("del")]
+        public async Task<IActionResult> DelHashes(int id)
+        {
+            var hash = await db.Feeds.FindAsync(id);
+            db.Remove(hash!);
+            await db.SaveChangesAsync();
+            return Ok("feed removed");
+        }
+    }
+}
