@@ -52,13 +52,8 @@ if (!isProduction) {
 const target = env.ASPNETCORE_HTTPS_PORT
   ? `https://localhost:${env.ASPNETCORE_HTTPS_PORT}`
   : env.ASPNETCORE_URLS
-<<<<<<< HEAD
     ? env.ASPNETCORE_URLS.split(';')[0]
     : 'https://localhost:7048';
-=======
-  ? env.ASPNETCORE_URLS.split(';')[0]
-  : 'https://localhost:7048';
->>>>>>> 2ab7d85b14734d04da1997c4dc290d79e46498d4
 
 export default defineConfig({
   plugins: [plugin()],
