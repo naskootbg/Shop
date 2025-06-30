@@ -22,7 +22,6 @@ namespace Backend.Controllers
         }
 
         [HttpPost("merge")]
-      
         public async Task<IActionResult> MergeFeeds([FromBody] List<string> hashes)
         {
             if (hashes == null || !hashes.Any())
@@ -40,9 +39,7 @@ namespace Backend.Controllers
                     var response = await client.GetAsync(url);
 
                     if (!response.IsSuccessStatusCode)
-                    {
                         continue;
-                    }
 
                     var stream = await response.Content.ReadAsStreamAsync();
                     var doc = XDocument.Load(stream);
@@ -52,21 +49,31 @@ namespace Backend.Controllers
                 }
                 catch (Exception ex)
                 {
-                    // Optional: log or collect errors
+                    // Optional: log or ignore
                 }
             }
 
-            // Wrap merged <product> elements in <products> root for JSON conversion
-            var mergedDoc = new XDocument(
-                new XElement("products", allProducts)
-            );
+            // ✅ Filter out products without price_discounted or price_discounted == 0
+            allProducts = allProducts
+                .Where(p =>
+                {
+                    var price = (string?)p.Element("price_discounted");
+                    return !string.IsNullOrWhiteSpace(price) &&
+                           decimal.TryParse(price, out var val) &&
+                           val > 0;
+                })
+                .ToList();
 
+            // ✅ Wrap for JSON
+            var mergedDoc = new XDocument(new XElement("products", allProducts));
             var json = JsonConvert.SerializeXNode(mergedDoc, Formatting.Indented, omitRootObject: false);
+
             Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
             await System.IO.File.WriteAllTextAsync(outputPath, json);
 
             return Ok("done");
         }
+
     }
 }
 

@@ -1,109 +1,127 @@
 <template>
   <div class="catalog">
-    <!-- Filters -->
-    <div class="filters">
-      <input v-model="store.searchQuery"
-             @input="store.applyFilters"
-             placeholder="Search products..."
-             list="suggestions"
-             class="input" />
-      <datalist id="suggestions">
-        <option v-for="s in store.suggestions" :key="s" :value="s" />
-      </datalist>
+    <div class="layout">
+      <!-- Filters -->
+      <div class="filters">
+        <input v-model="store.searchQuery"
+               @input="store.applyFilters"
+               placeholder="Search products..."
+               list="suggestions"
+               class="input" />
+        <datalist id="suggestions">
+          <option v-for="s in store.suggestions" :key="s" :value="s" />
+        </datalist>
 
-      <select v-model="store.selectedCategory" @change="store.applyFilters" class="select">
-        <option value="">All Categories</option>
-        <option v-for="cat in store.categories" :key="cat">{{ cat }}</option>
-      </select>
+        <select v-model="store.selectedCategory" @change="store.applyFilters" class="select">
+          <option value="">All Categories</option>
+          <option v-for="cat in store.categories" :key="cat">{{ cat }}</option>
+        </select>
 
-      <input type="range" min="0" max="100" v-model="store.discountPercent" @input="store.applyFilters" />
-      <label>Min Discount: {{ store.discountPercent }}%</label>
+        <input type="range" min="0" max="100" v-model="store.discountPercent" @input="store.applyFilters" />
+        <label>Min Discount: {{ store.discountPercent }}%</label>
 
-      <input type="number" v-model.number="store.minPrice" @change="store.applyFilters" placeholder="Min Price" class="input" />
-      <input type="number" v-model.number="store.maxPrice" @change="store.applyFilters" placeholder="Max Price" class="input" />
+        <input type="number" v-model.number="store.minPrice" @change="store.applyFilters" placeholder="Min Price" class="input" />
+        <input type="number" v-model.number="store.maxPrice" @change="store.applyFilters" placeholder="Max Price" class="input" />
 
-      <label><input type="checkbox" v-model="store.freeShipping" @change="store.applyFilters" /> Free Shipping</label>
-      <label><input type="checkbox" v-model="store.giftIncluded" @change="store.applyFilters" /> Gift Included</label>
-    </div>
+        <label><input type="checkbox" v-model="store.freeShipping" @change="store.applyFilters" /> Free Shipping</label>
+        <label><input type="checkbox" v-model="store.giftIncluded" @change="store.applyFilters" /> Gift Included</label>
+      </div>
 
-    <!-- Product Grid -->
-    <div class="grid">
-      <div v-for="product in store.paginatedProducts" :key="product.product_code" class="card" @click="openModal(product)">
-        <template v-if="discount(product) > 0">
-          <img :src="product.product_pic" alt="" class="image" />
-          <div class="discount-badge">-{{ discount(product) }}%</div>
-          <h3 class="title">{{ product.product_name }}</h3>
-          <p class="price">{{ product.price_discounted }} лв</p>
-          <small class="price-old">{{ product.price_vat }} лв</small>
-        </template>
+      <!-- Product Grid -->
+      <div class="content">
+        <div class="grid">
+          <div v-for="product in store.paginatedProducts"
+               :key="product.product_code"
+               class="card"
+               @click="openModal(product)">
+            <img :src="product.product_pic" alt="" class="image" />
+            <div class="discount-badge">-{{ discount(product) }}%</div>
+            <h3 class="title">{{ product.product_name }}</h3>
+            <p class="price">{{ product.price_discounted }} лв</p>
+            <small class="price-old">{{ product.price_vat }} лв</small>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+          <button @click="store.prevPage" :disabled="store.currentPage === 1">◀</button>
+          <span>Page {{ store.currentPage }} / {{ store.totalPages }}</span>
+          <button @click="store.nextPage" :disabled="store.currentPage === store.totalPages">▶</button>
+        </div>
       </div>
     </div>
 
-    <!-- Pagination -->
-    <div class="pagination">
-      <button @click="store.prevPage" :disabled="store.currentPage === 1">◀</button>
-      <span>Page {{ store.currentPage }} / {{ store.totalPages }}</span>
-      <button @click="store.nextPage" :disabled="store.currentPage === store.totalPages">▶</button>
-    </div>
-  </div>
+    <!-- Modal -->
+    <div v-if="selectedProduct" class="modal-overlay" @click.self="closeModal">
+      <div class="modal">
+        <button class="modal-close" @click="closeModal">×</button>
+        <img :src="selectedProduct.product_pic" alt="" class="modal-image" />
+        <h2>{{ selectedProduct.product_name }}</h2>
+        <p v-if="selectedProduct.product_desc" v-html="selectedProduct.product_desc"></p>
 
-  <!-- Modal -->
-  <div v-if="selectedProduct" class="modal-overlay" @click.self="closeModal">
-    <div class="modal">
-      <button class="modal-close" @click="closeModal">×</button>
-      <img :src="selectedProduct.product_pic" alt="" class="modal-image" />
-      <h2>{{ selectedProduct.product_name }}</h2>
-      <p v-if="selectedProduct.product_desc" v-html="selectedProduct.product_desc"></p>
+        <div class="modal-price">
+          <span class="new">{{ selectedProduct.price_discounted }} лв</span>
+          <span class="old" v-if="selectedProduct.price_discounted !== selectedProduct.price_vat">{{ selectedProduct.price_vat }} лв</span>
+          <span v-if="discount(selectedProduct) > 0" class="badge">-{{ discount(selectedProduct) }}%</span>
+        </div>
 
-      <div class="modal-price">
-        <span class="new">{{ selectedProduct.price_discounted }} лв</span>
-        <span class="old" v-if="selectedProduct.price_discounted !== selectedProduct.price_vat">{{ selectedProduct.price_vat }} лв</span>
-        <span v-if="discount(selectedProduct) > 0" class="badge">-{{ discount(selectedProduct) }}%</span>
+        <a :href="'https:' + selectedProduct.product_aff_link" target="_blank" class="buy-btn">Купи</a>
       </div>
-
-      <a :href="'https:' + selectedProduct.product_aff_link" target="_blank" class="buy-btn">Купи</a>
     </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
-import { useOrderStore } from '@/stores/useOrderStore'
+  import { ref, onMounted } from 'vue'
+  import { useOrderStore } from '@/stores/useOrderStore'
 
-const store = useOrderStore()
-const selectedProduct = ref(null)
+  const store = useOrderStore()
+  const selectedProduct = ref(null)
 
-onMounted(() => {
-  store.fetchFeed()
-})
+  onMounted(() => {
+    store.fetchFeed()
+  })
 
-function openModal(product) {
-  selectedProduct.value = product
-}
-function closeModal() {
-  selectedProduct.value = null
-}
-function discount(p) {
-  const vat = parseFloat(p.price_vat || 0)
-  const discounted = parseFloat(p.price_discounted || 0)
-  if (vat === 0 || discounted === 0 || discounted >= vat) return 0
-  return Math.round(((vat - discounted) / vat) * 100)
-}
+  function openModal(product) {
+    selectedProduct.value = product
+  }
+  function closeModal() {
+    selectedProduct.value = null
+  }
+  function discount(p) {
+    const vat = parseFloat(p.price_vat || 0)
+    const discounted = parseFloat(p.price_discounted || 0)
+    if (vat === 0 || discounted === 0 || discounted >= vat) return 0
+    return Math.round(((vat - discounted) / vat) * 100)
+  }
 </script>
 
-
-
 <style scoped>
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
   .catalog {
     padding: 1rem;
   }
 
-  .filters {
+  .layout {
     display: flex;
-    flex-wrap: wrap;
     gap: 1rem;
-    margin-bottom: 1rem;
-    align-items: center;
+    align-items: flex-start; /* 👈 key */
+  }
+
+  /* Sidebar Filters */
+  .filters {
+    flex: 0 0 240px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-right: 1rem;
+    border-right: 1px solid #ddd;
   }
 
   .input,
@@ -114,9 +132,16 @@ function discount(p) {
     border: 1px solid #ccc;
   }
 
+  .content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Products Grid */
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 1rem;
   }
 
@@ -130,6 +155,7 @@ function discount(p) {
     display: flex;
     flex-direction: column;
     align-items: center;
+    cursor: pointer;
   }
 
   .image {
@@ -177,6 +203,7 @@ function discount(p) {
     align-items: center;
   }
 
+  /* Modal */
   .modal-overlay {
     position: fixed;
     inset: 0;
@@ -249,5 +276,26 @@ function discount(p) {
     border-radius: 6px;
     text-decoration: none;
     font-weight: bold;
+  }
+
+  /* Mobile: Stack filters above grid */
+  @media (max-width: 768px) {
+    .layout {
+      flex-direction: column;
+    }
+
+    .filters {
+      flex-direction: row;
+      flex-wrap: wrap;
+      border-right: none;
+      border-bottom: 1px solid #ddd;
+      padding-right: 0;
+      margin-bottom: 1rem;
+    }
+
+      .filters input,
+      .filters select {
+        flex: 1 1 45%;
+      }
   }
 </style>
