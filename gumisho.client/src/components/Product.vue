@@ -5,7 +5,7 @@
       <div class="filters">
         <input v-model="store.searchQuery"
                @input="store.applyFilters"
-               placeholder="Search products..."
+               placeholder="Търсене..."
                list="suggestions"
                class="input" />
         <datalist id="suggestions">
@@ -13,18 +13,18 @@
         </datalist>
 
         <select v-model="store.selectedCategory" @change="store.applyFilters" class="select">
-          <option value="">All Categories</option>
+          <option value="">Категории</option>
           <option v-for="cat in store.categories" :key="cat">{{ cat }}</option>
         </select>
 
         <input type="range" min="0" max="100" v-model="store.discountPercent" @input="store.applyFilters" />
-        <label>Min Discount: {{ store.discountPercent }}%</label>
+        <label>Отстъпка в %: {{ store.discountPercent }}%</label>
 
-        <input type="number" v-model.number="store.minPrice" @change="store.applyFilters" placeholder="Min Price" class="input" />
-        <input type="number" v-model.number="store.maxPrice" @change="store.applyFilters" placeholder="Max Price" class="input" />
+        <input type="number" v-model.number="store.minPrice" @change="store.applyFilters" placeholder="Мин. Цена" class="input" />
+        <input type="number" v-model.number="store.maxPrice" @change="store.applyFilters" placeholder="Макс. Цена" class="input" />
 
-        <label><input type="checkbox" v-model="store.freeShipping" @change="store.applyFilters" /> Free Shipping</label>
-        <label><input type="checkbox" v-model="store.giftIncluded" @change="store.applyFilters" /> Gift Included</label>
+        <label><input type="checkbox" v-model="store.freeShipping" @change="store.applyFilters" /> Безплатна доставка</label>
+        <label><input type="checkbox" v-model="store.giftIncluded" @change="store.applyFilters" /> Включен подарък</label>
       </div>
 
       <!-- Product Grid -->
