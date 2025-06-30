@@ -32,15 +32,28 @@
         <div class="grid">
           <div v-for="product in store.paginatedProducts"
                :key="product.product_code"
-               class="card"
-               @click="openModal(product)">
-            <img :src="product.product_pic" alt="" class="image" />
-            <div class="discount-badge">-{{ discount(product) }}%</div>
-            <h3 class="title">{{ product.product_name }}</h3>
-            <p class="price">{{ product.price_discounted }} лв</p>
-            <small class="price-old">{{ product.price_vat }} лв</small>
+               class="card">
+            <router-link :to="`/${product.product_code}/${slugify(product.product_name)}`"
+                         class="router-link">
+              <img :src="product.product_pic"
+                   :alt="product.product_name"
+                   class="image"
+                   loading="lazy" />
+              <div class="discount-badge">-{{ discount(product) }}%</div>
+              <h3 class="title">{{ product.product_name }}</h3>
+              <p class="price">{{ Number(product.price_discounted).toFixed(2) }} лв</p>
+              <small class="price-old" v-if="product.price_discounted !== product.price_vat">
+                {{ Number(product.price_vat).toFixed(2) }} лв
+              </small>
+            </router-link>
+
+            <!-- Sticky Footer -->
+            <div class="card-footer">
+              <button @click="openModal(product)">🛒 Добави</button>
+            </div>
           </div>
         </div>
+
 
         <!-- Pagination -->
         <div class="pagination">
@@ -74,6 +87,7 @@
 <script setup>
   import { ref, onMounted } from 'vue'
   import { useOrderStore } from '@/stores/useOrderStore'
+  import { slugify } from '@/api/slugify.js'
 
   const store = useOrderStore()
   const selectedProduct = ref(null)
@@ -81,6 +95,7 @@
   onMounted(() => {
     store.fetchFeed()
   })
+ 
 
   function openModal(product) {
     selectedProduct.value = product
@@ -148,22 +163,50 @@
   .card {
     position: relative;
     border: 1px solid #ccc;
-    padding: 10px;
     border-radius: 12px;
     background: #fff;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     display: flex;
     flex-direction: column;
-    align-items: center;
-    cursor: pointer;
+    justify-content: space-between;
+    overflow: hidden;
   }
-
+  .router-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+    padding: 10px;
+    flex-grow: 1;
+  }
   .image {
     width: 100%;
     height: 140px;
     object-fit: contain;
     margin-bottom: 0.5rem;
+    background-color: white;
   }
+  .card-footer {
+    padding: 0.5rem 1rem;
+    border-top: 1px solid #eee;
+    text-align: center;
+    background: #fafafa;
+  }
+
+    .card-footer button {
+      padding: 6px 12px;
+      font-size: 14px;
+      background-color: #2e7d32;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+      .card-footer button:hover {
+        background-color: #25682a;
+      }
 
   .title {
     font-size: 14px;

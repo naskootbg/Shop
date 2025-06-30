@@ -3,34 +3,44 @@ import HomePage from '../views/HomePage.vue';
 import AdminPage from '../views/AdminPage.vue';
 import LoginPage from '../views/LoginPage.vue';
 import RegisterPage from '../views/RegisterPage.vue';
-import { useUserStore } from '../stores/useUserStore';
 import NotFound from '../views/NotFound.vue';
 import Profile from '../views/Profile.vue';
+import ProductDetails from '@/views/ProductDetails.vue';
+import { useUserStore } from '../stores/useUserStore';
 
 const routes = [
-    {path: '/', name:'home', component: HomePage},
-    {path: '/admin', name:'admin', component: AdminPage},
-    {path: '/login', name:'login', component: LoginPage,
-      beforeEnter: async () => {
-        const store = useUserStore();
-        await store.onEnter();
-        if (store.isUserLogged && store.isAdmin) {
-          return '/admin'
-        }
-        else if (store.isUserLogged && !store.isAdmin) {
-          return '/'
-        }
-      },
-    },
-    {path: '/join', name:'join', component: RegisterPage},
-    {path: '/api/logout', name:'logout'},
-    {path: '/profile', name:'profile', component: Profile },
-    { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFound },
+  { path: '/', name: 'home', component: HomePage },
+  { path: '/admin', name: 'admin', component: AdminPage },
+  {
+    path: '/login',
+    name: 'login',
+    component: LoginPage,
+    beforeEnter: async () => {
+      const store = useUserStore();
+      await store.onEnter();
+      if (store.isUserLogged && store.isAdmin) return '/admin';
+      if (store.isUserLogged) return '/';
+    }
+  },
+  { path: '/join', name: 'join', component: RegisterPage },
+  { path: '/profile', name: 'profile', component: Profile },
+  { path: '/api/logout', name: 'logout' },
+
+  // Product details page
+  { path: '/:id/:slug', name: 'ProductDetails', component: ProductDetails, props: true },
+
+  // SEO-friendly filter routes (should load catalog!)
+  { path: '/discount/:value', name: 'ByDiscount', component: HomePage, props: true },
+  { path: '/category/:category', name: 'ByCategory', component: HomePage, props: true },
+  { path: '/search/:search', name: 'BySearch', component: HomePage, props: true },
+  { path: '/tag/:tag', name: 'ByTag', component: HomePage, props: true },
+
+  { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFound },
 ];
 
 const router = createRouter({
-    routes,
-    history: createWebHistory(),
+  history: createWebHistory(),
+  routes,
 });
 
 export default router;

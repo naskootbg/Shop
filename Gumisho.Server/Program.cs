@@ -29,7 +29,8 @@ builder.Services.AddIdentityApiEndpoints<IdentityUser>(options =>
 
 builder.Services.AddControllers();
 //builder.Services.AddTransient<ILocationService, LocationService>();
- 
+builder.Services.AddHttpClient<SitemapGeneratorService>();
+
 
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

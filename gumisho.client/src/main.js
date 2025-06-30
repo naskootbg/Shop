@@ -1,16 +1,23 @@
-import { createApp } from 'vue';
-import App from './App.vue';
-import { createPinia } from 'pinia';
-import router from './config/router';
-import '@picocss/pico'; // ✅ Keep CSS import
-import '@/styles/reset.css';
- 
-const pinia = createPinia();
+// main.js
+import App from './App.vue'
+import { ViteSSG } from 'vite-ssg'
+import { createPinia } from 'pinia'
+import router from './config/router'
+import '@picocss/pico'
+import '@/styles/reset.css'
 
-createApp(App)
-  .use(pinia)
-  .use(router)
-  .mount("#app");
+export const createApp = ViteSSG(
+  App,
+  { routes: router.options.routes }, // ViteSSG needs routes here
+  async ({ app, router, isClient }) => {
+    const pinia = createPinia()
+    app.use(pinia)
+    app.use(router)
 
-  import { useOrderStore } from '@/stores/useOrderStore'
-useOrderStore().fetchFeed()
+    if (isClient) {
+      // ✅ Load feed only in browser (avoid during prerender)
+      const { useOrderStore } = await import('@/stores/useOrderStore')
+      await useOrderStore().fetchFeed()
+    }
+  }
+)
