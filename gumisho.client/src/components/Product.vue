@@ -95,20 +95,23 @@
   const store = useOrderStore();
   const selectedProduct = ref(null);
 
-  onMounted(() => {
-    store.fetchFeed();
-    applyRouteFilters();
-  })
-
-  watch(() => route.fullPath, () => {
+  onMounted(async () => {
+    await store.fetchFeed()
     applyRouteFilters()
   })
+
+  watch(() => route.params, () => {
+    applyRouteFilters()
+  }, { deep: true })
 
   function httpFix(text) {
     return text.replace("http:", "https:");
   }
 
   function applyRouteFilters() {
+    store.discountPercent = route.params.value ? parseInt(route.params.value) : 0
+    store.selectedCategory = route.params.category || ''
+    store.searchQuery = route.params.search || ''
     if (route.params.value) {
       store.discountPercent = parseInt(route.params.value)
     }
