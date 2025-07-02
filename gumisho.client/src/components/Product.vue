@@ -5,7 +5,7 @@
       <div class="filters">
         <input v-model="store.searchQuery"
                @input="store.applyFilters"
-               placeholder="Търсене..."
+               placeholder="🔍 Търсене..."
                list="suggestions"
                class="input" />
         <datalist id="suggestions">
@@ -16,15 +16,15 @@
           <option value="">Категории</option>
           <option v-for="cat in store.categories" :key="cat">{{ cat }}</option>
         </select>
-
+        <label>Мин. Отстъпка: {{ store.discountPercent }}%</label>
         <input type="range" min="0" max="100" v-model="store.discountPercent" @input="store.applyFilters" />
-        <label>Отстъпка в %: {{ store.discountPercent }}%</label>
 
-        <input type="number" v-model.number="store.minPrice" @change="store.applyFilters" placeholder="Мин. Цена" class="input" />
-        <input type="number" v-model.number="store.maxPrice" @change="store.applyFilters" placeholder="Макс. Цена" class="input" />
-
+        <fieldset role="group">
+          <input type="number" v-model.number="store.minPrice" @input="store.applyFilters" placeholder="Мин. Цена" class="input" />
+          <input type="number" v-model.number="store.maxPrice" @input="store.applyFilters" placeholder="Макс. Цена" class="input" />
+        </fieldset>
         <label><input type="checkbox" v-model="store.freeShipping" @change="store.applyFilters" /> Безплатна доставка</label>
-        <label><input type="checkbox" v-model="store.giftIncluded" @change="store.applyFilters" /> Включен подарък</label>
+        <!--<label><input type="checkbox" v-model="store.giftIncluded" @change="store.applyFilters" /> Включен подарък</label>-->
       </div>
 
       <!-- Product Grid -->
@@ -85,12 +85,41 @@
 </template>
 
 <script setup>
-  import { ref, onMounted, watch } from 'vue'
+  import { ref, onMounted, watch, computed } from 'vue'
   import { useOrderStore } from '@/stores/useOrderStore'
   import { slugify } from '@/api/slugify.js'
   import { useRoute } from 'vue-router'
+  import { useHead } from '@vueuse/head'
+  
 
-  const route = useRoute();
+  const route = useRoute()
+
+  const pageTitle = computed(() => {
+    if (route.params.value) return `Продукти с отстъпка над ${route.params.value}%`
+    if (route.params.category) return `Категория: ${route.params.category}`
+    if (route.params.search) return `Резултати за: ${route.params.search}`
+    if (route.params.tag) return `Маркирани с: ${route.params.tag}`
+    return 'Продуктите с най-добри цени в България'
+  })
+
+  const pageDescription = computed(() => `Голям избор на продукти. ${pageTitle.value}`)
+  function updateHead() {
+    useHead({
+      title: pageTitle.value,
+      meta: [
+        { name: 'description', content: pageDescription.value },
+        { property: 'og:title', content: pageTitle.value },
+        { property: 'og:description', content: pageDescription.value },
+        { property: 'og:url', content: window.location.href },
+      ],
+    })
+  }
+
+  updateHead()
+
+  watch(() => route.fullPath, () => {
+    updateHead()
+  })
 
   const store = useOrderStore();
   const selectedProduct = ref(null);
@@ -153,6 +182,9 @@
     margin: 0;
     padding: 0;
   }
+  div {
+    background: white;
+  }
   .catalog {
     padding: 1rem;
   }
@@ -171,6 +203,8 @@
     gap: 0.5rem;
     padding-right: 1rem;
     border-right: 1px solid #ddd;
+    background: white;
+   
   }
 
   .input,
@@ -374,5 +408,8 @@
       .filters select {
         flex: 1 1 45%;
       }
+  }
+  label{
+      font-size: .8rem;
   }
 </style>
