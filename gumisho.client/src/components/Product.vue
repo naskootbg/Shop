@@ -85,17 +85,44 @@
 </template>
 
 <script setup>
-  import { ref, onMounted } from 'vue'
+  import { ref, onMounted, watch } from 'vue'
   import { useOrderStore } from '@/stores/useOrderStore'
   import { slugify } from '@/api/slugify.js'
+  import { useRoute } from 'vue-router'
 
-  const store = useOrderStore()
-  const selectedProduct = ref(null)
+  const route = useRoute();
+
+  const store = useOrderStore();
+  const selectedProduct = ref(null);
 
   onMounted(() => {
-    store.fetchFeed()
+    store.fetchFeed();
+    applyRouteFilters();
   })
- 
+
+  watch(() => route.fullPath, () => {
+    applyRouteFilters()
+  })
+
+  function applyRouteFilters() {
+    if (route.params.value) {
+      store.discountPercent = parseInt(route.params.value)
+    }
+
+    if (route.params.category) {
+      store.selectedCategory = route.params.category
+    }
+
+    if (route.params.search) {
+      store.searchQuery = route.params.search
+    }
+
+    if (route.params.tag) {
+      store.searchQuery = route.params.tag
+    }
+
+    store.applyFilters()
+  }
 
   function openModal(product) {
     selectedProduct.value = product

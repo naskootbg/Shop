@@ -1,13 +1,11 @@
 import { defineStore } from 'pinia';
- 
+import { LoadAll } from '@/api/feed';
 
 export const useAdminStore = defineStore('adminStore', {
   state() {
     return { 
-      orders: [],
-      drivers: [],
-      admins: [],
-      driversInLocations: [],
+      hashes: [],
+       
     };
   },
   getters: {
@@ -15,8 +13,8 @@ export const useAdminStore = defineStore('adminStore', {
   },
   actions: {
     async onEnter() {
-  
-       
+
+      this.hashes = await LoadAll();
       },
       
       

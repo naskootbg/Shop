@@ -40,8 +40,12 @@ builder.Services.ConfigureApplicationCookie(options => { options.Cookie.SameSite
 builder.Services.AddHttpClient();
 
 var app = builder.Build();
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    await SeedData.InitializeAsync(services);
+}
 
- 
 
 app.MapPost("/api/logout", async (SignInManager<IdentityUser> signInManager) =>
 {

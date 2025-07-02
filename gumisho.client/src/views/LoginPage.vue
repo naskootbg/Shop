@@ -22,8 +22,8 @@ export default {
 
         // Form state
         const form = reactive({
-          username: 'admin@gumisho.bg',
-            password: '',
+          username: 'admin@evtinoo.com',
+            password: 'aaaaaa',
         });
 
 

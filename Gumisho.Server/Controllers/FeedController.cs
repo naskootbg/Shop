@@ -31,16 +31,7 @@ namespace Backend.Controllers
         [HttpPost("add")]
         public async Task<IActionResult> AddlHashes([FromBody] FeedDto dto)
         {
-            if (dto.Id > 0)
-            {
-                var hash = await db.Feeds.FindAsync(dto.Id);
-                hash!.Name = dto.Name;
-                hash.Hash = dto.Hash;
-                db.Feeds.Update(hash);
-                await db.SaveChangesAsync();
-                return Ok(hash);
-            }
-            else {
+             
                 var newFeed = new Feed()
                 {
                     Name = dto.Name,
@@ -49,10 +40,10 @@ namespace Backend.Controllers
                 await db.Feeds.AddAsync(newFeed);
                 await db.SaveChangesAsync();
                 return Ok(newFeed);
-            }
+            
         }
         [HttpPost("del")]
-        public async Task<IActionResult> DelHashes(int id)
+        public async Task<IActionResult> DelHashes([FromQuery] int id)
         {
             var hash = await db.Feeds.FindAsync(id);
             db.Remove(hash!);

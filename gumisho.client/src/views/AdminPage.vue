@@ -1,65 +1,55 @@
 <script setup>
-  import { ref } from 'vue';
-  
-  import Services from '@/components/Admin/Services.vue';
- 
+  import { ref, onMounted } from 'vue';
   import { useAdminStore } from '@/stores/useAdminStore';
-
-
+  import { AddHash, DelHash } from '@/api/feed';
   const adminStore = useAdminStore();
-  const showOrders = ref(false);
-  const showOrdersDrivers = ref(false);
-  const showRoles = ref(false);
-  const showDrivers = ref(false);
-  const showServices = ref(false);
-  
+  onMounted(async () => {
 
-  function giveOrders() {
-    showOrders.value = !showOrders.value;
-    showOrdersDrivers.value = false;
-    showRoles.value = false;
-    showDrivers.value = false;
-    showServices.value = false;
-  }
-  function giveOrdersDrivers() {
-    showOrdersDrivers.value = !showOrdersDrivers.value;
-    showOrders.value = false;
-    showRoles.value = false;
-    showDrivers.value = false;
-    showServices.value = false;
-  }
-  function giveRoles() {
-    showRoles.value = !showRoles.value;
-    showOrdersDrivers.value = false;
-    showOrders.value = false;
-    showDrivers.value = false;
-    showServices.value = false;
-  }
-  function giveDrivers() {
-    showDrivers.value = !showDrivers.value;
-    showOrdersDrivers.value = false;
-    showOrders.value = false;
-    showRoles.value = false;
-    showServices.value = false;
-  }
+    adminStore.onEnter();
 
-  function giveServices() {
-    showServices.value = !showServices.value;
-    showDrivers.value = false;
-    showOrdersDrivers.value = false;
-    showOrders.value = false;
-    showRoles.value = false;
+  });
+  const hashes = ref(adminStore.hashes)
+  const hashName = ref('');
+  const hashVal = ref('');
+  async function addHash() {
+    var hash = await AddHash(hashVal.value, hashName.value);
+    adminStore.hashes.push(hash);
+    hashVal.value = '';
+    hashName.value = '';
+  }
+  async function delHash(id) {
+    var hash = await DelHash(id);
+    adminStore.hashes = adminStore.hashes.filter(h => h.id != id);
   }
 </script>
 
 <template>
  
- 
-
-
+  <fieldset role="group">
+    <input v-model="hashName" type="text" name="hashName" placeholder="Име" />
+    <input v-model="hashVal" type="text" name="hashVal" placeholder="Хеш" />
+    <button @click="addHash">➕</button>
+  </fieldset>
+  <div class="data">
+    <table>
+      <thead><tr><th>Име</th><th>Хеш</th><th></th></tr></thead>
+      <tbody><tr v-for="hash in adminStore.hashes" :key="hash.id"><td>{{hash.name}}</td><td>{{hash.hash}}</td><td><button @click="delHash(hash.id)" class="delbtn">🗑️</button></td></tr></tbody>
+    </table>
+  </div>
 </template>
 
 <style scoped>
-   
- 
+   table, th, tr, td{
+     font-size: .8rem;
+     padding: 1px;
+     text-align: center;
+   }
+  .data {
+    width: 60%;
+    align-items: center;
+  }
+  .delbtn {
+    background: red;
+    padding: 1px;
+  }
 </style>

@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Backend.Data;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System.Xml.Linq;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Backend.Controllers
 {
@@ -9,6 +11,7 @@ namespace Backend.Controllers
     [ApiController]
     public class ProfitshareController : ControllerBase
     {
+        private readonly AppDbContext db;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly string outputPath = Path.GetFullPath(
             Path.Combine(Directory.GetCurrentDirectory(), "..", "gumisho.client", "public", "feeds.json")
@@ -16,14 +19,16 @@ namespace Backend.Controllers
 
 
 
-        public ProfitshareController(IHttpClientFactory httpClientFactory)
+        public ProfitshareController(IHttpClientFactory httpClientFactory, AppDbContext _db)
         {
             _httpClientFactory = httpClientFactory;
+            db = _db;
         }
 
         [HttpPost("merge")]
-        public async Task<IActionResult> MergeFeeds([FromBody] List<string> hashes)
+        public async Task<IActionResult> MergeFeeds()
         {
+            var hashes = await db.Feeds.AsNoTracking().ToListAsync();
             if (hashes == null || !hashes.Any())
                 return BadRequest("Use: /api/profitshare/merge?hashes=abc&hashes=def");
 
@@ -31,7 +36,7 @@ namespace Backend.Controllers
 
             foreach (var hash in hashes)
             {
-                var url = $"https://profitshare.bg/affiliate-feed/export/?hash={hash}";
+                var url = $"https://profitshare.bg/affiliate-feed/export/?hash={hash.Hash}";
 
                 try
                 {

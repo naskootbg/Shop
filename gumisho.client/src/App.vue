@@ -25,7 +25,7 @@
 <template>
 
   <nav>
-    <!--<AppNavigation />-->
+    <AppNavigation />
   </nav>
   <div class="holy-grail-grid">
     <div v-if="isLoading" class="container">
