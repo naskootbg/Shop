@@ -1,4 +1,3 @@
-import { createRouter, createWebHistory } from "vue-router";
 import HomePage from '../views/HomePage.vue';
 import AdminPage from '../views/AdminPage.vue';
 import LoginPage from '../views/LoginPage.vue';
@@ -8,7 +7,7 @@ import Profile from '../views/Profile.vue';
 import ProductDetails from '@/views/ProductDetails.vue';
 import { useUserStore } from '../stores/useUserStore';
 
-const routes = [
+export default [
   { path: '/', name: 'home', component: HomePage },
   { path: '/admin', name: 'admin', component: AdminPage },
   {
@@ -26,10 +25,9 @@ const routes = [
   { path: '/profile', name: 'profile', component: Profile },
   { path: '/api/logout', name: 'logout' },
 
-  // Product details page
   { path: '/:id/:slug', name: 'ProductDetails', component: ProductDetails, props: true },
 
-  // SEO-friendly filter routes (should load catalog!)
+  // Filter routes → all render HomePage
   { path: '/discount/:value', name: 'ByDiscount', component: HomePage, props: true },
   { path: '/category/:category', name: 'ByCategory', component: HomePage, props: true },
   { path: '/search/:search', name: 'BySearch', component: HomePage, props: true },
@@ -37,10 +35,3 @@ const routes = [
 
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFound },
 ];
-
-const router = createRouter({
-  history: createWebHistory(),
-  routes,
-});
-
-export default router;

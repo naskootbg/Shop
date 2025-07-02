@@ -5,8 +5,8 @@ import { useUserStore } from '@/stores/useUserStore';
 const userStore = useUserStore();
 const links = [
     { name: 'home', label: 'НАЧАЛО' },
-    { name: 'login', label: 'ВХОД' },
-    { name: 'join', label: 'РЕГИСТРАЦИЯ' },
+  { name: 'login', label: '👤 ВХОД' },
+  { name: 'join', label: '👤 РЕГИСТРАЦИЯ' },
 
 ]
 
@@ -20,8 +20,8 @@ const links = [
 <template>
 
         <ul>
-            <li><h1>💫 Gumisho</h1></li>
-
+            <li><div class="logo"><img src="/logo.jpg" /></div></li>
+<li><h1>Най-добри цени на хиляди продукти</h1></li>
         </ul>
 
         <ul v-if="!userStore.isUserLogged">
@@ -44,7 +44,7 @@ const links = [
           <li>
             <router-link v-slot="{ isActive }" :to="{ name: 'profile' }">
               <button type="button" :class="[isActive ? 'primary' : 'primary outline']">
-                ПРОФИЛ
+                👤 ПРОФИЛ
               </button>
             </router-link>
           </li>
@@ -68,7 +68,9 @@ const links = [
 </template>
 
 <style scoped>
-
+.logo{
+    width: 80%;
+}
 h1 {
     font-size: 1rem;
     text-transform: uppercase;

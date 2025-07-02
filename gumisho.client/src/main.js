@@ -2,20 +2,18 @@
 import App from './App.vue'
 import { ViteSSG } from 'vite-ssg'
 import { createPinia } from 'pinia'
-import router from './config/router'
+import routes from './config/router' // Just the routes array, not a router instance!
 import '@picocss/pico'
 import '@/styles/reset.css'
 
 export const createApp = ViteSSG(
   App,
-  { routes: router.options.routes }, // ViteSSG needs routes here
+  { routes }, // ← Pass routes only, NOT a router instance
   async ({ app, router, isClient }) => {
     const pinia = createPinia()
     app.use(pinia)
-    app.use(router)
 
     if (isClient) {
-      // ✅ Load feed only in browser (avoid during prerender)
       const { useOrderStore } = await import('@/stores/useOrderStore')
       await useOrderStore().fetchFeed()
     }

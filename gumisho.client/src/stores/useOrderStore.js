@@ -1,13 +1,15 @@
 // stores/useOrderStore.js
 import { defineStore } from 'pinia'
+const worker = new Worker(new URL('@/config/filterWorker.js', import.meta.url), { type: 'module' });
 
-function getDiscount(p) {
-  const vat = parseFloat(p.price_vat || 0)
-  const discounted = parseFloat(p.price_discounted || 0)
-  return vat > 0 && discounted > 0 && discounted < vat
-    ? Math.round(((vat - discounted) / vat) * 100)
-    : 0
-}
+
+//function getDiscount(p) {
+//  const vat = parseFloat(p.price_vat || 0)
+//  const discounted = parseFloat(p.price_discounted || 0)
+//  return vat > 0 && discounted > 0 && discounted < vat
+//    ? Math.round(((vat - discounted) / vat) * 100)
+//    : 0
+//}
 
 export const useOrderStore = defineStore('orderStore', {
   state: () => ({
@@ -41,37 +43,71 @@ export const useOrderStore = defineStore('orderStore', {
   },
 
   actions: {
+    getFilters() {
+      return {
+        searchQuery: this.searchQuery,
+        selectedCategory: this.selectedCategory,
+        discountPercent: this.discountPercent,
+        minPrice: this.minPrice,
+        maxPrice: this.maxPrice,
+        freeShipping: this.freeShipping,
+        giftIncluded: this.giftIncluded,
+      };
+    },
     async fetchFeed(url = '/feeds.json') {
       try {
         const res = await fetch(url)
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
+
         const data = await res.json()
-        this.allProducts = data.products?.product || []
+        const rawProducts = data.products?.product || []
+
+        // Remove duplicates based on product_code
+        const uniqueMap = new Map()
+        for (const p of rawProducts) {
+          if (p.product_code && !uniqueMap.has(p.product_code)) {
+            uniqueMap.set(p.product_code, p)
+          }
+        }
+
+        this.allProducts = Array.from(uniqueMap.values())
         this.applyFilters()
+
       } catch (err) {
         console.error('Failed to load feed:', err)
       }
     },
-
     applyFilters() {
-      this.currentPage = 1
+      this.loading = true;
 
-      this.filteredProducts = this.allProducts.filter(p => {
-        const name = p.product_name?.toLowerCase() || ''
-        const price = parseFloat(p.price_discounted || 0)
-        const discount = getDiscount(p)
+      const safeProducts = this.allProducts.map(p => ({
+        product_code: p.product_code,
+        product_name: p.product_name,
+        price_discounted: p.price_discounted,
+        price_vat: p.price_vat,
+        category: p.category,
+        delivery: p.delivery,
+        gift: p.gift,
+        product_pic: p.product_pic,
+        product_desc: p.product_desc || '',
+        product_aff_link: p.product_aff_link || '',
+        free_shipping: p.free_shipping,
+        gift_included: p.gift_included,
+      }));
 
-        return (
-          discount >= this.discountPercent &&
-          name.includes(this.searchQuery.toLowerCase()) &&
-          (!this.selectedCategory || p.category === this.selectedCategory) &&
-          (!this.minPrice || price >= this.minPrice) &&
-          (!this.maxPrice || price <= this.maxPrice) &&
-          (!this.freeShipping || p.free_shipping === '1') &&
-          (!this.giftIncluded || p.gift_included === '1')
-        )
-      })
-    },
+      // ✅ Send safe data and filters to worker
+      worker.postMessage({
+        products: safeProducts,
+        filters: this.getFilters()
+      });
+
+      worker.onmessage = (e) => {
+        this.filteredProducts = e.data;
+        this.loading = false;
+      };
+    }
+
+,
 
     nextPage() {
       if (this.currentPage < this.totalPages) this.currentPage++

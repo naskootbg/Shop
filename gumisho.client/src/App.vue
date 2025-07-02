@@ -41,13 +41,15 @@
 
 
 <style scoped>
+
   nav {
-    max-width: calc(1200px + 1.5 * 0.5rem);
+    max-width: 100%;
     margin: auto;
     padding: 0.25rem 0.5rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background: white;
   }
 
 

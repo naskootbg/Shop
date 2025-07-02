@@ -3,7 +3,7 @@
     <h1 class="title">{{ product.product_name }}</h1>
 
     <div class="content-box">
-      <img :src="product.product_pic" class="product-img" />
+      <img :src="httpFix(product.product_pic)" class="product-img" />
 
       <div class="description" v-html="product.product_desc"></div>
     </div>
@@ -53,6 +53,9 @@
       { property: 'og:type', content: 'product' }
     ]
   })
+  function httpFix(text){
+    return text.replace("http:","https:");
+  }
 </script>
 
 <style scoped>

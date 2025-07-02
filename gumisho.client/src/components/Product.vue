@@ -35,7 +35,7 @@
                class="card">
             <router-link :to="`/${product.product_code}/${slugify(product.product_name)}`"
                          class="router-link">
-              <img :src="product.product_pic"
+              <img :src="httpFix(product.product_pic)"
                    :alt="product.product_name"
                    class="image"
                    loading="lazy" />
@@ -68,7 +68,7 @@
     <div v-if="selectedProduct" class="modal-overlay" @click.self="closeModal">
       <div class="modal">
         <button class="modal-close" @click="closeModal">×</button>
-        <img :src="selectedProduct.product_pic" alt="" class="modal-image" />
+        <img :src="httpFix(selectedProduct.product_pic)" alt="" class="modal-image" />
         <h2>{{ selectedProduct.product_name }}</h2>
         <p v-if="selectedProduct.product_desc" v-html="selectedProduct.product_desc"></p>
 
@@ -103,6 +103,10 @@
   watch(() => route.fullPath, () => {
     applyRouteFilters()
   })
+
+  function httpFix(text) {
+    return text.replace("http:", "https:");
+  }
 
   function applyRouteFilters() {
     if (route.params.value) {
