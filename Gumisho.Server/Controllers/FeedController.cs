@@ -12,7 +12,7 @@ namespace Backend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     public class FeedController : ControllerBase
     {
         private readonly AppDbContext db;
@@ -22,11 +22,20 @@ namespace Backend.Controllers
         {
             db = _db;             
         }
+
+   
         [HttpPost("all")]
         public async Task<IActionResult> AllHashes()
         {
             var feeds = await db.Feeds.AsNoTracking().ToListAsync();
             return Ok(feeds);   
+        }
+        [HttpPost("import")]
+        public async Task<IActionResult> Import([FromBody] List<Feed> feeds)
+        {
+            await db.AddRangeAsync(feeds);
+            await db.SaveChangesAsync();
+            return Ok("added");
         }
         [HttpPost("add")]
         public async Task<IActionResult> AddlHashes([FromBody] FeedDto dto)

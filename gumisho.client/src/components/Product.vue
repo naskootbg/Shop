@@ -11,20 +11,46 @@
         <datalist id="suggestions">
           <option v-for="s in store.suggestions" :key="s" :value="s" />
         </datalist>
+        <label for="selectedCategory">
+          Категория:
+          <select v-model="store.selectedCategory" @change="store.applyFilters" class="select" name="selectedCategory" id="selectedCategory">
+            <option value="">Категории</option>
+            <option v-for="cat in store.categories" :key="cat">{{ cat }}</option>
+          </select>
+        </label>
+        <label for="discountPercent">
+          Мин. Отстъпка: {{ store.discountPercent }}%
+          <input type="range"
+                 min="0"
+                 max="100"
+                 v-model.number="store.discountPercent"
+                 @input="store.applyFilters" name="discountPercent" id="discountPercent" class="input-range" />
 
-        <select v-model="store.selectedCategory" @change="store.applyFilters" class="select">
-          <option value="">Категории</option>
-          <option v-for="cat in store.categories" :key="cat">{{ cat }}</option>
-        </select>
-        <label>Мин. Отстъпка: {{ store.discountPercent }}%</label>
-        <input type="range" min="0" max="100" v-model="store.discountPercent" @input="store.applyFilters" />
+        </label>
+        <label for="maxPrice">
+          Макс. Цена до: {{ store.maxPrice }} лв
+          <input type="range"
+                 :min="0"
+                 :max="store.maxAvailablePrice"
+                 v-model.number="store.maxPrice"
+                 @input="store.applyFilters"
+                 class="input-range"
+                 id="maxPrice" />
+        </label>
 
-        <fieldset role="group">
-          <input type="number" v-model.number="store.minPrice" @input="store.applyFilters" placeholder="Мин. Цена" class="input" />
-          <input type="number" v-model.number="store.maxPrice" @input="store.applyFilters" placeholder="Макс. Цена" class="input" />
-        </fieldset>
+        <label>
+          Сортиране:
+          <select v-model="store.sortOrder" @change="store.applyFilters" class="select">
+            <option value="">Без сортиране</option>
+            <option value="price_asc">Цена ↑</option>
+            <option value="price_desc">Цена ↓</option>
+            <option value="discount_asc">Отстъпка ↑</option>
+            <option value="discount_desc">Отстъпка ↓</option>
+          </select>
+        </label>
+
+
         <label><input type="checkbox" v-model="store.freeShipping" @change="store.applyFilters" /> Безплатна доставка</label>
-        <!--<label><input type="checkbox" v-model="store.giftIncluded" @change="store.applyFilters" /> Включен подарък</label>-->
       </div>
 
       <!-- Product Grid -->
@@ -33,10 +59,12 @@
           <div v-for="product in store.paginatedProducts"
                :key="product.product_code"
                class="card">
-            <router-link :to="`/${product.product_code}/${slugify(product.product_name)}`"
+            <router-link :to="`/${encodeURIComponent(product.product_code)}/${slugify(product.product_name)}`"
                          class="router-link">
-              <img :src="httpFix(product.product_pic)"
+             
+              <img :src="localImage(product)"
                    :alt="product.product_name"
+                   @error="onImageError($event, product.product_pic)"
                    class="image"
                    loading="lazy" />
               <div class="discount-badge">-{{ discount(product) }}%</div>
@@ -54,7 +82,6 @@
           </div>
         </div>
 
-
         <!-- Pagination -->
         <div class="pagination">
           <button @click="store.prevPage" :disabled="store.currentPage === 1">◀</button>
@@ -68,9 +95,11 @@
     <div v-if="selectedProduct" class="modal-overlay" @click.self="closeModal">
       <div class="modal">
         <button class="modal-close" @click="closeModal">×</button>
-        <img :src="httpFix(selectedProduct.product_pic)" alt="" class="modal-image" />
+        <img :src="localImage(selectedProduct)"
+             @error="onImageError($event, selectedProduct.product_pic)"
+             class="modal-image" />
         <h2>{{ selectedProduct.product_name }}</h2>
-        <p v-if="selectedProduct.product_desc" v-html="selectedProduct.product_desc"></p>
+        <p v-if="selectedProduct.product_desc" v-html="formattedDescription(selectedProduct)"></p>
 
         <div class="modal-price">
           <span class="new">{{ selectedProduct.price_discounted }} лв</span>
@@ -87,22 +116,26 @@
 <script setup>
   import { ref, onMounted, watch, computed } from 'vue'
   import { useOrderStore } from '@/stores/useOrderStore'
+  import { useUserStore } from '@/stores/useUserStore'
   import { slugify } from '@/api/slugify.js'
   import { useRoute } from 'vue-router'
   import { useHead } from '@vueuse/head'
-  
 
   const route = useRoute()
+  const store = useOrderStore()
+  const userStore = useUserStore()
+  const selectedProduct = ref(null)
 
   const pageTitle = computed(() => {
     if (route.params.value) return `Продукти с отстъпка над ${route.params.value}%`
-    if (route.params.category) return `Категория: ${route.params.category}`
-    if (route.params.search) return `Резултати за: ${route.params.search}`
-    if (route.params.tag) return `Маркирани с: ${route.params.tag}`
+    if (route.params.category) return `Категория: Промоции на ${route.params.category}`
+    if (route.params.search) return `Резултати за промоции на: ${route.params.search}`
+    if (route.params.tag) return `Търсене на: ${route.params.tag} на промоция`
     return 'Продуктите с най-добри цени в България'
   })
 
-  const pageDescription = computed(() => `Голям избор на продукти. ${pageTitle.value}`)
+  const pageDescription = computed(() => `Голям избор на продукти в промоции. Ежеседмично събираме информация от над 50 големи онлайн магазини. ${pageTitle.value}`)
+
   function updateHead() {
     useHead({
       title: pageTitle.value,
@@ -114,65 +147,91 @@
       ],
     })
   }
-
-  updateHead()
-
-  watch(() => route.fullPath, () => {
-    updateHead()
-  })
-
-  const store = useOrderStore();
-  const selectedProduct = ref(null);
-
-  onMounted(async () => {
-    await store.fetchFeed()
-    applyRouteFilters()
-  })
-
-  watch(() => route.params, () => {
-    applyRouteFilters()
-  }, { deep: true })
-
-  function httpFix(text) {
-    return text.replace("http:", "https:");
+  function slugify2(str) {
+    return (str || '')
+      .toLowerCase()
+      .replace(/\s+/g, '-')                    // Replace spaces with dashes
+      .replace(/[^a-zа-яё0-9\-]+/giu, '')      // Allow Cyrillic + Latin + digits + dash
+      .replace(/--+/g, '-')                    // Replace multiple dashes with one
+      .replace(/^-+|-+$/g, '');                // Trim dashes from start/end
+  }
+  function localImage(product) {
+    const category = slugify2(product.category || '');
+    const name = slugify2(product.product_name || '');
+    const maxName = name.length > 60 ? name.substring(0, 60) : name;
+    const maxCat = category.length > 40 ? category.substring(0, 40) : category;
+    const filename = `${maxName}-${product.product_code}.webp`;
+    return `/images/${maxCat}/${filename}`;
   }
 
-  function applyRouteFilters() {
-    store.discountPercent = route.params.value ? parseInt(route.params.value) : 0
-    store.selectedCategory = route.params.category || ''
-    store.searchQuery = route.params.search || ''
-    if (route.params.value) {
-      store.discountPercent = parseInt(route.params.value)
-    }
+  function onImageError(event, fallbackUrl) {
+    event.target.src = httpFix(fallbackUrl);
+  }
+  
+  let lastRoute = ''
 
-    if (route.params.category) {
-      store.selectedCategory = route.params.category
-    }
+  watch(
+    () => route.fullPath,
+    async (newVal) => {
+      if (newVal === lastRoute) return
+      lastRoute = newVal
+      updateHead()
+      await loadProducts()
+    },
+    { immediate: true }
+  )
 
-    if (route.params.search) {
-      store.searchQuery = route.params.search
-    }
+  function httpFix(text) {
+    return text.replace('http:', 'https:')
+  }
 
-    if (route.params.tag) {
-      store.searchQuery = route.params.tag
-    }
+  function formattedDescription(product) {
+    const desc = product.product_desc?.trim() || ''
+    const link = `<a href="https:${product.product_aff_link}" target="_blank" style="color: #2e7d32; text-decoration: underline;">Научи повече</a>`
+    if (desc.endsWith('...') || desc.endsWith('…')) return desc + ' ' + link
+    return desc
+  }
 
-    store.applyFilters()
+  function discount(p) {
+    const vat = parseFloat(p.price_vat || 0)
+    const discounted = parseFloat(p.price_discounted || 0)
+    return vat > 0 && discounted > 0 && discounted < vat
+      ? Math.round(((vat - discounted) / vat) * 100)
+      : 0
   }
 
   function openModal(product) {
-    selectedProduct.value = product
+    selectedProduct.value = product;
+    userStore.AddItem(product.product_code);
   }
   function closeModal() {
     selectedProduct.value = null
   }
-  function discount(p) {
-    const vat = parseFloat(p.price_vat || 0)
-    const discounted = parseFloat(p.price_discounted || 0)
-    if (vat === 0 || discounted === 0 || discounted >= vat) return 0
-    return Math.round(((vat - discounted) / vat) * 100)
+
+  async function loadProducts() {
+    // Parse route params into filters
+    const discountParam = route.params.value ? parseInt(route.params.value) : 0;
+    const categoryParam = route.params.category || '';
+    const tagParam = route.params.tag || '';
+
+    // Set store filters from route
+    store.discountPercent = discountParam;
+    store.selectedCategory = categoryParam;
+    store.searchQuery = tagParam;
+
+    // Load feed if not loaded, then apply filters
+    await store.applyFilters();
+    if (!store.maxPrice) {
+      store.maxPrice = store.maxAvailablePrice;
+      store.applyFilters(); // apply again if necessary
+    }
   }
+
+
+  //onMounted(loadProducts)
 </script>
+
+
 
 <style scoped>
   *,
@@ -182,9 +241,11 @@
     margin: 0;
     padding: 0;
   }
+
   div {
     background: white;
   }
+
   .catalog {
     padding: 1rem;
   }
@@ -204,7 +265,6 @@
     padding-right: 1rem;
     border-right: 1px solid #ddd;
     background: white;
-   
   }
 
   .input,
@@ -239,6 +299,7 @@
     justify-content: space-between;
     overflow: hidden;
   }
+
   .router-link {
     display: flex;
     flex-direction: column;
@@ -248,6 +309,7 @@
     padding: 10px;
     flex-grow: 1;
   }
+
   .image {
     width: 100%;
     height: 140px;
@@ -255,6 +317,7 @@
     margin-bottom: 0.5rem;
     background-color: white;
   }
+
   .card-footer {
     padding: 0.5rem 1rem;
     border-top: 1px solid #eee;
@@ -327,8 +390,8 @@
 
   .modal {
     background: #fff;
-    max-width: 600px;
-    width: 90%;
+    font-size: .7rem;
+    width: 74%;
     padding: 1.5rem;
     border-radius: 12px;
     position: relative;
@@ -343,8 +406,16 @@
     background: transparent;
     border: none;
     font-size: 28px;
+    font-weight: bold;
+    color: #333; /* <- Ensure it's visible */
     cursor: pointer;
+    z-index: 10;
   }
+
+    .modal-close:hover {
+      color: red;
+    }
+
 
   .modal-image {
     width: 100%;
@@ -394,7 +465,9 @@
     .layout {
       flex-direction: column;
     }
-
+    .input-range {
+      width: 100%;
+    }
     .filters {
       flex-direction: row;
       flex-wrap: wrap;
@@ -408,8 +481,12 @@
       .filters select {
         flex: 1 1 45%;
       }
+    .grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
   }
-  label{
-      font-size: .8rem;
+
+  label {
+    font-size: .8rem;
   }
 </style>

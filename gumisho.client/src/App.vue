@@ -13,8 +13,8 @@
   const orderStore = useOrderStore();
 
   onMounted(async () => {
-    //await userStore.onEnter();
-
+    await userStore.onEnter();
+    await useOrderStore().fetchFeed()
     isLoading.value = false;
 
 
@@ -27,7 +27,7 @@
   <nav>
     <AppNavigation />
   </nav>
-  <div class="holy-grail-grid">
+  <div>
     <div v-if="isLoading" class="container">
       <span aria-busy="true" class="item">Зареждам Данни...</span>
     </div>

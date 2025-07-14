@@ -5,10 +5,12 @@ import RegisterPage from '../views/RegisterPage.vue';
 import NotFound from '../views/NotFound.vue';
 import Profile from '../views/Profile.vue';
 import ProductDetails from '@/views/ProductDetails.vue';
+import Card from '@/views/Card.vue';
 import { useUserStore } from '../stores/useUserStore';
 
 export default [
   { path: '/', name: 'home', component: HomePage },
+  { path: '/card', name: 'card', component: Card },
   { path: '/admin', name: 'admin', component: AdminPage },
   {
     path: '/login',

@@ -9,13 +9,13 @@ import '@/styles/reset.css'
 export const createApp = ViteSSG(
   App,
   { routes }, // ← Pass routes only, NOT a router instance
-  async ({ app, router, isClient }) => {
+  async ({ app, routes, isClient }) => {
     const pinia = createPinia()
     app.use(pinia)
 
-    if (isClient) {
-      const { useOrderStore } = await import('@/stores/useOrderStore')
-      await useOrderStore().fetchFeed()
-    }
+    //if (isClient) {
+    //  const { useOrderStore } = await import('@/stores/useOrderStore')
+    //  await useOrderStore().fetchFeed()
+    //}
   }
 )

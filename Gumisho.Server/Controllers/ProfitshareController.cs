@@ -1,5 +1,5 @@
 ﻿using Backend.Data;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -9,9 +9,11 @@ namespace Backend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class ProfitshareController : ControllerBase
     {
         private readonly AppDbContext db;
+        private readonly SitemapStaticGeneratorService sm;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly string outputPath = Path.GetFullPath(
             Path.Combine(Directory.GetCurrentDirectory(), "..", "gumisho.client", "public", "feeds.json")
@@ -19,11 +21,13 @@ namespace Backend.Controllers
 
 
 
-        public ProfitshareController(IHttpClientFactory httpClientFactory, AppDbContext _db)
+        public ProfitshareController(IHttpClientFactory httpClientFactory, AppDbContext _db, SitemapStaticGeneratorService _sm )
         {
             _httpClientFactory = httpClientFactory;
             db = _db;
+            sm = _sm;
         }
+         
 
         [HttpPost("merge")]
         public async Task<IActionResult> MergeFeeds()

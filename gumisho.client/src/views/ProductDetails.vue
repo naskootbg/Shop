@@ -3,8 +3,12 @@
     <h1 class="title">{{ product.product_name }}</h1>
 
     <div class="content-box">
-      <img :src="httpFix(product.product_pic)" class="product-img" />
-
+    
+      <img :src="localImage(product)"
+           :alt="product.product_name"
+           @error="onImageError($event, product.product_pic)"
+           class="product-img"
+           loading="lazy" />
       <div class="description" v-html="product.product_desc"></div>
     </div>
 
@@ -21,9 +25,20 @@
 
     <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
       <div class="modal">
-        <h2>Добавено в количката 🎉</h2>
-        <p>Имейл за поръчка ще бъде изпратен по-късно с връзка към този продукт.</p>
-        <button class="modal-close" @click="showModal = false">Затвори</button>
+        <button class="modal-close" @click="showModal = false">×</button>
+        <img :src="localImage(product)"
+             @error="onImageError($event, product.product_pic)"
+             class="modal-image" />
+        <h2>{{ product.product_name }}</h2>
+        <p v-if="product.product_desc" v-html="formattedDescription(product)"></p>
+
+        <div class="modal-price">
+          <span class="new">{{ product.price_discounted }} лв</span>
+          <span class="old" v-if="product.price_discounted !== product.price_vat">{{ product.price_vat }} лв</span>
+          <span v-if="discount(product) > 0" class="badge">-{{ discount(product) }}%</span>
+        </div>
+
+        <a :href="'https:' + product.product_aff_link" target="_blank" class="buy-btn">Купи</a>
       </div>
     </div>
   </div>
@@ -53,6 +68,46 @@
       { property: 'og:type', content: 'product' }
     ]
   })
+
+  function slugify2(str) {
+    return (str || '')
+      .toLowerCase()
+      .replace(/\s+/g, '-')                    // Replace spaces with dashes
+      .replace(/[^a-zа-яё0-9\-]+/giu, '')      // Allow Cyrillic + Latin + digits + dash
+      .replace(/--+/g, '-')                    // Replace multiple dashes with one
+      .replace(/^-+|-+$/g, '');                // Trim dashes from start/end
+  }
+  function localImage(product) {
+    const category = slugify2(product.category || '');
+    const name = slugify2(product.product_name || '');
+    const maxName = name.length > 60 ? name.substring(0, 60) : name;
+    const maxCat = category.length > 40 ? category.substring(0, 40) : category;
+    const filename = `${maxName}-${product.product_code}.webp`;
+    console.log(`/images/${maxCat}/${filename}`);
+    return `/images/${maxCat}/${filename}`;
+  }
+
+  function onImageError(event, fallbackUrl) {
+    event.target.src = httpFix(fallbackUrl);
+  }
+
+  function formattedDescription(product) {
+    const desc = product.product_desc?.trim() || ''
+    const link = `<a href="https:${product.product_aff_link}" target="_blank" style="color: #2e7d32; text-decoration: underline;">Научи повече</a>`
+
+    // If it ends in three dots (with optional space), append link
+    if (desc.endsWith('...') || desc.endsWith('…')) {
+      return desc + ' ' + link
+    }
+
+    return desc
+  }
+  function discount(p) {
+    const vat = parseFloat(p.price_vat || 0)
+    const discounted = parseFloat(p.price_discounted || 0)
+    if (vat === 0 || discounted === 0 || discounted >= vat) return 0
+    return Math.round(((vat - discounted) / vat) * 100)
+  }
   function httpFix(text){
     return text.replace("http:","https:");
   }
@@ -155,24 +210,77 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: 50;
   }
 
   .modal {
+    position: relative; /* <-- add this */
     background: white;
     padding: 2rem;
     border-radius: 12px;
     text-align: center;
-    max-width: 400px;
+    width: 74%;
   }
 
   .modal-close {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    background: transparent;
+    border: none;
+    font-size: 28px;
+    font-weight: bold;
+    color: #333; /* <- Ensure it's visible */
+    cursor: pointer;
+    z-index: 10;
+  }
+
+    .modal-close:hover {
+      color: red;
+    }
+
+
+  .modal-image {
+    width: 100%;
+    max-height: 300px;
+    object-fit: contain;
+    margin-bottom: 1rem;
+  }
+
+  .modal-price {
+    margin-top: 1rem;
+    font-size: 18px;
+  }
+
+    .modal-price .new {
+      font-weight: bold;
+      color: #111;
+    }
+
+    .modal-price .old {
+      margin-left: 10px;
+      text-decoration: line-through;
+      color: #888;
+    }
+
+  .badge {
+    margin-left: 10px;
+    background: red;
+    color: white;
+    padding: 2px 6px;
+    font-size: 12px;
+    border-radius: 4px;
+  }
+
+  .buy-btn {
+    display: inline-block;
     margin-top: 1rem;
     padding: 8px 16px;
-    background: #aaa;
+    background: #2e7d32;
     color: white;
-    border: none;
     border-radius: 6px;
-    cursor: pointer;
+    text-decoration: none;
+    font-weight: bold;
   }
+
 </style>
