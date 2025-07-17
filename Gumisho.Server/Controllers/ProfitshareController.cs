@@ -13,7 +13,7 @@ namespace Backend.Controllers
     public class ProfitshareController : ControllerBase
     {
         private readonly AppDbContext db;
-        private readonly SitemapStaticGeneratorService sm;
+         
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly string outputPath = Path.GetFullPath(
             Path.Combine(Directory.GetCurrentDirectory(), "..", "gumisho.client", "public", "feeds.json")
@@ -21,11 +21,11 @@ namespace Backend.Controllers
 
 
 
-        public ProfitshareController(IHttpClientFactory httpClientFactory, AppDbContext _db, SitemapStaticGeneratorService _sm )
+        public ProfitshareController(IHttpClientFactory httpClientFactory, AppDbContext _db)
         {
             _httpClientFactory = httpClientFactory;
             db = _db;
-            sm = _sm;
+           
         }
          
 

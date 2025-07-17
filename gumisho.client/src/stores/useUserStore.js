@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { GetInfo, doLogin, doLogout } from '../api/identity';
 import { ClearCard, RemoveProduct, AddProduct, CreateCard } from '../api/card';
-
+import { MySubscriptions } from '@/api/subscribe.js'
 
 
 
@@ -15,6 +15,9 @@ export const useUserStore = defineStore('userStore', {
       roles: [],
       driveLocations: [],
       card: null,
+      isReady: false,
+      subscriptions: [],
+     
     };
   },
   getters: {
@@ -25,32 +28,53 @@ export const useUserStore = defineStore('userStore', {
    
   },
   actions: {
-    async onEnter() {
+    async checkSession() {
       const data = await GetInfo();
-
+      console.log(data)
       this.username = data.userName;
       this.email = data.email || null;
       this.adresses = data.addresses || [];
       this.roles = data.role || [];
       this.orders = data.orders || [];
+      this.isReady = true;
+      var subs = await MySubscriptions(this.email);
+      this.subscriptions.push(subs);
+    },
+    async onEnter() {
+      
 
-      const savedCard = JSON.parse(localStorage.getItem('card'));
+      // 🧠 Try to load saved card safely
+      let savedCard = null;
+      try {
+        const rawCard = localStorage.getItem('card');
+        savedCard = rawCard ? JSON.parse(rawCard) : null;
+      } catch (e) {
+        console.warn('Invalid card in localStorage, clearing...', e);
+        localStorage.removeItem('card'); // Prevent future issues
+      }
 
-      // 🧠 Make sure this.card exists first
+      // 🛠 Initialize this.card if undefined
       if (!this.card) {
-        this.card = {}; // initialize if undefined
+        this.card = {};
       }
 
+      // ✅ Merge saved card into reactive object
       if (savedCard) {
-        Object.assign(this.card, savedCard); // ✅ merge into reactive object
+        Object.assign(this.card, savedCard);
       }
 
+      // 💡 If user is logged and card is empty, create new one
       if (this.isUserLogged && (!savedCard || Object.keys(savedCard).length === 0)) {
         const newCard = await CreateCard(this.email, this.username);
-        Object.assign(this.card, newCard); // ✅ merge for reactivity
-        localStorage.setItem('card', JSON.stringify(this.card));
+        Object.assign(this.card, newCard);
+        try {
+          localStorage.setItem('card', JSON.stringify(this.card)); // ✅ always stringify
+        } catch (e) {
+          console.error('Failed to save new card to localStorage', e);
+        }
       }
     }
+
     ,
     async AddItem(code) {
       // Ensure card exists

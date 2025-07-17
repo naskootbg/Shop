@@ -18,7 +18,7 @@
             <h3 class="product-name">{{ product.product_name }}</h3>
             <p class="product-desc" v-html="product.product_desc"></p>
             <p class="product-price">
-              {{ product.price_discounted }} {{ product.currency.replace("leva","лв") }}
+              {{ Number(product.price_discounted).toFixed(2) }} {{ product.currency.replace("leva","лв") }}
             </p>
           </div>
           <div class="product-actions">
@@ -73,6 +73,17 @@
 </script>
 
 <style scoped>
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  div {
+    background: white;
+  }
   .cart-container {
     padding: 16px;
   }

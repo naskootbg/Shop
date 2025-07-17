@@ -1,6 +1,7 @@
 ﻿using Backend.Contracts;
 using Backend.Data;
 using Backend.Services;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
@@ -22,7 +23,11 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddIdentityApiEndpoints<IdentityUser>(options =>
 {
-    // identity options...
+    options.SignIn.RequireConfirmedAccount = false;
+    options.Password.RequireDigit = false;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequiredUniqueChars = 0;
 })
     .AddRoles<IdentityRole>()
     .AddDefaultUI()
@@ -32,7 +37,7 @@ builder.Services.AddIdentityApiEndpoints<IdentityUser>(options =>
 builder.Services.AddHttpClient<SitemapStaticGeneratorService>();
 //builder.Services.AddTransient<PushService>();
 builder.Services.AddTransient<EmailService>();
-
+builder.Services.AddTransient<ISubscriber, SubscriberService>();
 // Controllers, Swagger, CORS, etc.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

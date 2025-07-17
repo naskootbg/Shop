@@ -23,7 +23,7 @@ export default {
         // Form state
         const form = reactive({
           username: 'admin@evtinoo.com',
-            password: 'aaaaaa',
+            password: '',
         });
 
 
@@ -77,7 +77,8 @@ export default {
                     <input v-model="form.password" type="password" :placeholder="formDataBG.password" />
                 </FormFieldset>
 
-                <button class="primary" type="submit">Login</button>
+                <button class="primary" type="submit">Вход</button>
+              <br /> или <router-link to="/join" class="card">Регистрация</router-link>
             </form>
         </article>
     </div>

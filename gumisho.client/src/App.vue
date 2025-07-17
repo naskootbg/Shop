@@ -42,15 +42,6 @@
 
 <style scoped>
 
-  nav {
-    max-width: 100%;
-    margin: auto;
-    padding: 0.25rem 0.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: white;
-  }
 
 
   header {

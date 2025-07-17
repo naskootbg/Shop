@@ -8,7 +8,8 @@ namespace Backend.Data
 {
     public class AppDbContext : IdentityDbContext<IdentityUser>
     {
-           public DbSet<Feed> Feeds { get; set; }
+        public DbSet<Subscriber> Subscribers { get; set; }
+        public DbSet<Feed> Feeds { get; set; }
         public DbSet<ProcessedImage> ProcessedImages { get; set; }
         public DbSet<Card> Cards { get; set; }
         public DbSet<EmailAttachment> EmailAttachments { get; set; }

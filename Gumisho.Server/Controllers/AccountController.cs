@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 [Route("api/[controller]")]
@@ -70,8 +72,20 @@ public class AccountController : ControllerBase
         return Ok(userInfo);
     }
 
-     
-
+    [HttpPost("logout-fb")]
+    public async Task<IActionResult> LogoutFb()
+    {
+        await _signInManager.SignOutAsync();
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme); // Facebook cookie
+        return Ok(new { message = "User logged out" });
+    }
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout()
+    {
+        await _signInManager.SignOutAsync();
+        await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+        return Ok(new { message = "User logged out" });
+    }
     public class RegisterModel
     {
         public string Username { get; set; } = string.Empty;

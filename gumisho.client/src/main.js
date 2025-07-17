@@ -13,9 +13,9 @@ export const createApp = ViteSSG(
     const pinia = createPinia()
     app.use(pinia)
 
-    //if (isClient) {
-    //  const { useOrderStore } = await import('@/stores/useOrderStore')
-    //  await useOrderStore().fetchFeed()
-    //}
+    if (isClient) {
+      const { useUserStore } = await import('@/stores/useUserStore')
+      await useUserStore().checkSession()
+    }
   }
 )

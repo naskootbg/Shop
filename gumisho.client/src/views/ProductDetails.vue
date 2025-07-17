@@ -1,9 +1,10 @@
 <template>
   <div v-if="product" class="product-page">
+
     <h1 class="title">{{ product.product_name }}</h1>
 
     <div class="content-box">
-    
+
       <img :src="localImage(product)"
            :alt="product.product_name"
            @error="onImageError($event, product.product_pic)"
@@ -40,18 +41,23 @@
 
         <a :href="'https:' + product.product_aff_link" target="_blank" class="buy-btn">Купи</a>
       </div>
+
     </div>
+    <Subscribe v-if="userStore.isReady" :product="product" />
   </div>
 </template>
 
 <script setup>
   import { useRoute } from 'vue-router'
   import { useOrderStore } from '@/stores/useOrderStore'
+  import { useUserStore } from '@/stores/useUserStore'
   import { computed, ref } from 'vue'
   import { useHead } from '@vueuse/head'
+  import Subscribe from '@/components/Subscribe.vue'
 
   const route = useRoute()
   const store = useOrderStore()
+  const userStore = useUserStore()
   const showModal = ref(false)
 
   const product = computed(() =>
@@ -83,7 +89,7 @@
     const maxName = name.length > 60 ? name.substring(0, 60) : name;
     const maxCat = category.length > 40 ? category.substring(0, 40) : category;
     const filename = `${maxName}-${product.product_code}.webp`;
-    console.log(`/images/${maxCat}/${filename}`);
+   // console.log(`/images/${maxCat}/${filename}`);
     return `/images/${maxCat}/${filename}`;
   }
 

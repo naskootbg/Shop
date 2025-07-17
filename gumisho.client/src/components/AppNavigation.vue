@@ -1,108 +1,104 @@
 <script setup>
-import { useUserStore } from '@/stores/useUserStore';
+  import { useUserStore } from '@/stores/useUserStore';
 
 
-const userStore = useUserStore();
-const links = [
-    { name: 'home', label: 'НАЧАЛО' },
-  { name: 'login', label: '👤 ВХОД' },
-  { name: 'join', label: '👤 РЕГИСТРАЦИЯ' },
+  const userStore = useUserStore();
 
-]
 
- async function Logout(){
+  async function Logout() {
     await userStore.LogOut();
     location.reload();
- }
+  }
 
 </script>
-
 <template>
-  
-  <ul>
-    <li>
-      <div class="logo">
-        <router-link :to="{ name: 'home' }">
-          <img src="/logo.webp" alt="Evtinoo Logo" fetchpriority="high" />
-        </router-link>
-      </div>
-    </li>
-    <li><h1>Най-добри цени на хиляди продукти</h1></li>
-    <li><router-link to="/" class="card">🏠</router-link> </li>
-    <li><router-link to="card" class="card">🛒</router-link> </li>
-    <li><router-link to="profile" class="card">👤</router-link> </li>
-
-  </ul>
-
-
-
-  <!--<ul v-if="!userStore.isUserLogged">
-      <li v-for="link in links" :key="link.name">
-          <router-link v-slot="{ isActive }" :to="{ name: link.name }">
-              <button type="button" :class="[isActive ? 'primary' : 'primary outline']">
-                  {{ link.label }}
-              </button>
+  <nav>
+    <ul>
+      <li>
+        <div class="logo">
+          <router-link :to="{ name: 'home' }">
+            <img src="/logo.webp" alt="Evtinoo Logo" fetchpriority="high" />
           </router-link>
+        </div>
       </li>
-  </ul>-->
-  <!--<ul v-else>
-    <li>
-      <router-link v-slot="{ isActive }" :to="{ name: 'home' }">
-        <button type="button" :class="[isActive ? 'primary' : 'primary outline']">
-          НАЧАЛО
-        </button>
-      </router-link>
-    </li>
-    <li>
-      <router-link v-slot="{ isActive }" :to="{ name: 'profile' }">
-        <button type="button" :class="[isActive ? 'primary' : 'primary outline']">
-          👤 ПРОФИЛ
-        </button>
-      </router-link>
-    </li>
 
-    <li>
-      <router-link v-if="userStore.isAdmin" v-slot="{ isActive }" :to="{ name: 'admin' }">
-        <button type="button" :class="[isActive ? 'primary' : 'primary outline']">
-          АДМИН
-        </button>
-      </router-link>
-    </li>
-    <li>
-      <button @click="Logout()" type="button" class="danger">
-        ИЗХОД
-      </button>
+      <li class="header"><h1 class="main-title">Най-добри цени на хиляди продукти</h1></li>
 
-
-    </li>
-  </ul>-->
-
+      <li class="nav-links">
+        <router-link to="/" class="card">🏠</router-link>
+        <router-link to="/card" class="card">🛒</router-link>
+        <router-link v-if="userStore.isUserLogged" to="/profile" class="card">👤</router-link>
+        <router-link v-else to="/login" class="card">👤</router-link>
+      </li>
+    </ul>
+  </nav>
 </template>
 
 <style scoped>
-  .card{
-      font-size: 1.6rem;
+  nav {
+    max-width: 100%;
+    margin: auto;
+  
+    background: white;
+    text-align: center;
   }
-.logo{
-    width: 80%;
-}
-  .logo img {
-    width: 360px;
-    height: auto;
+
+  .card {
+    font-size: 1.6rem;
   }
-h1 {
+
+  .logo {
+    width: 100%;
+    text-align: center;
+  }
+
+    .logo img {
+      width: 260px;
+      height: auto;
+    }
+
+  .main-title {
     font-size: 1rem;
     text-transform: uppercase;
-}
+    text-align: center;
+    margin: 0.1rem 0;
+  }
 
-ul {
+  ul {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .1rem;
+    
+  }
+
+  .nav-links {
     display: flex;
     gap: 1rem;
-}
-.danger{
-    background-color: red;
-}
-button{
-    font-size: .9rem;
-}
+  }
+
+  /* 📱 Mobile styles */
+  @media (max-width: 768px) {
+    ul {
+      flex-direction: column;
+      align-items: center;
+      padding: 0px;
+    
+    }
+    .header {
+      margin-top: -2rem;
+    }
+    .logo img {
+      width: 200px;
+      margin-top: -1rem;
+    }
+
+    .nav-links {
+      flex-direction: row;
+      justify-content: center;
+      margin-top: -2rem;
+    }
+  }
 </style>

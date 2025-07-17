@@ -4,7 +4,7 @@ import { logger } from "@/utils/logger";
 export async function GetInfo(){
     try{
       const res = await axiosUrl.get('account/info');
-      console.log(res.data);
+    //  console.log(res.data);
 return res.data;
     }
     catch (e){
@@ -43,7 +43,7 @@ return[];
 
 export async function doLogout() {
     try{
-        await axiosUrl.post('logout',{},{
+        await axiosUrl.post('account/logout',{},{
             headers: {
                 'accept': '*/*',
               },

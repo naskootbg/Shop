@@ -9,8 +9,17 @@ const year = new Date().getFullYear();
 </template>
 
 <style>
-div {
-    background-color: aliceblue;
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  div {
+    background: white;
+  
     padding: .2rem;
     margin: auto;
 }
